@@ -27,30 +27,24 @@ st.set_page_config(
 # 2. PROJECT PATHS
 # ============================================================
 
-# Automatically get the folder where app.py is located
+# Hugging Face model repository
+from huggingface_hub import hf_hub_download
 
-BASE_DIR = os.path.dirname(
-    os.path.abspath(__file__)
+HF_REPO_ID = "Syamu-1207/indian-spices-ann"
+
+MODEL_PATH = hf_hub_download(
+    repo_id=HF_REPO_ID,
+    filename="spice_model_augmented.keras"
 )
 
-MODEL_DIR = os.path.join(
-    BASE_DIR,
-    "models"
+SCALER_PATH = hf_hub_download(
+    repo_id=HF_REPO_ID,
+    filename="scaler_augmented.pkl"
 )
 
-MODEL_PATH = os.path.join(
-    MODEL_DIR,
-    "spice_model_augmented.keras"
-)
-
-SCALER_PATH = os.path.join(
-    MODEL_DIR,
-    "scaler_augmented.pkl"
-)
-
-ENCODER_PATH = os.path.join(
-    MODEL_DIR,
-    "label_encoder.pkl"
+ENCODER_PATH = hf_hub_download(
+    repo_id=HF_REPO_ID,
+    filename="label_encoder.pkl"
 )
 
 IMG_SIZE = (64, 64)
@@ -77,61 +71,11 @@ st.info(
 
 
 # ============================================================
-# 4. CHECK MODEL FILES
+# 4. MODEL FILES
 # ============================================================
 
-required_files = {
-    "ANN Model": MODEL_PATH,
-    "Scaler": SCALER_PATH,
-    "Label Encoder": ENCODER_PATH
-}
-
-missing_files = []
-
-for file_name, file_path in required_files.items():
-
-    if not os.path.exists(file_path):
-
-        missing_files.append(
-            f"{file_name}: {file_path}"
-        )
-
-
-if missing_files:
-
-    st.error(
-        "❌ Required model files are missing."
-    )
-
-    st.write(
-        "Please check your project structure:"
-    )
-
-    st.code(
-        """
-Indian_Spice_Classification_New/
-│
-├── app.py
-│
-└── models/
-    ├── spice_model_augmented.keras
-    ├── scaler_augmented.pkl
-    └── label_encoder.pkl
-"""
-    )
-
-    st.write(
-        "Missing files:"
-    )
-
-    for missing in missing_files:
-
-        st.error(
-            missing
-        )
-
-    st.stop()
-
+# The trained model, scaler and label encoder are downloaded
+# automatically from the Hugging Face repository above.
 
 # ============================================================
 # 5. LOAD MODEL, SCALER AND LABEL ENCODER
@@ -549,33 +493,28 @@ with st.expander(
 
 
 # ============================================================
-# 14. PROJECT PATH INFORMATION
+# 14. MODEL SOURCE INFORMATION
 # ============================================================
 
 with st.expander(
-    "🔧 Project Path Information"
+    "🔧 Model Source Information"
 ):
 
     st.write(
-        f"**Project folder:** `{BASE_DIR}`"
+        f"**Hugging Face repository:** `{HF_REPO_ID}`"
     )
 
     st.write(
-        f"**Models folder:** `{MODEL_DIR}`"
+        "**Model:** `spice_model_augmented.keras`"
     )
 
     st.write(
-        f"**Model file:** `{MODEL_PATH}`"
+        "**Scaler:** `scaler_augmented.pkl`"
     )
 
     st.write(
-        f"**Scaler file:** `{SCALER_PATH}`"
+        "**Label encoder:** `label_encoder.pkl`"
     )
-
-    st.write(
-        f"**Label encoder:** `{ENCODER_PATH}`"
-    )
-
 
 # ============================================================
 # END OF APP
