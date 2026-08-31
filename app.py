@@ -86,6 +86,7 @@ def load_artifacts():
 
     model = load_model(
         MODEL_PATH
+        compile=False
     )
 
     scaler = joblib.load(
