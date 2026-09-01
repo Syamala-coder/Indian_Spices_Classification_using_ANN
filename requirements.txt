@@ -1,4 +1,4 @@
-nnumpy
+numpy
 pandas
 joblib
 Pillow
@@ -7,4 +7,4 @@ mediapipe
 tensorflow==2.21.0
 scikit-learn
 matplotlib
-streamlit
+streamlitgit add requirements.txt
