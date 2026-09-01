@@ -1,12 +1,10 @@
-numpy
+nnumpy
 pandas
 joblib
 Pillow
 opencv-python-headless
 mediapipe
-tensorflow==26.2.1
-keras==2.15.0
+tensorflow==2.21.0
 scikit-learn
 matplotlib
 streamlit
-huggingface-hub
