@@ -2,13 +2,13 @@
 # INDIAN SPICE CLASSIFICATION - STREAMLIT APP
 # ============================================================
 
+import os
 import streamlit as st
 import numpy as np
 import joblib
 
 from PIL import Image
 from tensorflow.keras.models import load_model
-from huggingface_hub import hf_hub_download
 
 
 # ============================================================
@@ -23,10 +23,26 @@ st.set_page_config(
 
 
 # ============================================================
-# 2. HUGGING FACE REPOSITORY
+# 2. MODEL FILE PATHS
 # ============================================================
 
-HF_REPO_ID = "Syamu-1207/indian-spices-ann"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_DIR = os.path.join(BASE_DIR, "models")
+
+MODEL_PATH = os.path.join(
+    MODEL_DIR,
+    "spice_model_augmented.h5"
+)
+
+SCALER_PATH = os.path.join(
+    MODEL_DIR,
+    "scaler_augmented.pkl"
+)
+
+ENCODER_PATH = os.path.join(
+    MODEL_DIR,
+    "label_encoder.pkl"
+)
 
 IMG_SIZE = (64, 64)
 
@@ -55,38 +71,36 @@ st.info(
 @st.cache_resource
 def load_artifacts():
 
-    # Download H5 model from Hugging Face
-    model_path = hf_hub_download(
-        repo_id=HF_REPO_ID,
-        filename="spice_model_augmented.h5"
-    )
+    # Check whether required files exist
+    if not os.path.exists(MODEL_PATH):
+        raise FileNotFoundError(
+            f"Model file not found: {MODEL_PATH}"
+        )
 
-    # Download scaler
-    scaler_path = hf_hub_download(
-        repo_id=HF_REPO_ID,
-        filename="scaler_augmented.pkl"
-    )
+    if not os.path.exists(SCALER_PATH):
+        raise FileNotFoundError(
+            f"Scaler file not found: {SCALER_PATH}"
+        )
 
-    # Download label encoder
-    encoder_path = hf_hub_download(
-        repo_id=HF_REPO_ID,
-        filename="label_encoder.pkl"
-    )
+    if not os.path.exists(ENCODER_PATH):
+        raise FileNotFoundError(
+            f"Label encoder not found: {ENCODER_PATH}"
+        )
 
-    # Load model
+    # Load ANN model
     model = load_model(
-        model_path,
+        MODEL_PATH,
         compile=False
     )
 
     # Load scaler
     scaler = joblib.load(
-        scaler_path
+        SCALER_PATH
     )
 
     # Load label encoder
     label_encoder = joblib.load(
-        encoder_path
+        ENCODER_PATH
     )
 
     return model, scaler, label_encoder
@@ -120,16 +134,16 @@ def preprocess_image(image):
     # Convert to RGB
     image = image.convert("RGB")
 
-    # Resize
+    # Resize to 64 × 64
     image = image.resize(IMG_SIZE)
 
-    # Convert to NumPy
+    # Convert image to NumPy array
     image_array = np.array(
         image,
         dtype=np.float32
     )
 
-    # Normalize
+    # Normalize pixel values
     image_array = image_array / 255.0
 
     # Flatten
@@ -138,7 +152,7 @@ def preprocess_image(image):
         -1
     )
 
-    # Apply trained scaler
+    # Apply trained StandardScaler
     image_scaled = scaler.transform(
         image_flat
     )
@@ -243,32 +257,51 @@ if image_file is not None:
 
         try:
 
-            # Preprocess
+            # -----------------------------------------------
+            # Preprocess image
+            # -----------------------------------------------
+
             image_scaled = preprocess_image(
                 original_image
             )
 
+
+            # -----------------------------------------------
             # Prediction
+            # -----------------------------------------------
+
             probabilities = model.predict(
                 image_scaled,
                 verbose=0
             )
 
+
+            # -----------------------------------------------
             # Predicted index
+            # -----------------------------------------------
+
             predicted_index = int(
                 np.argmax(
                     probabilities[0]
                 )
             )
 
+
+            # -----------------------------------------------
             # Confidence
+            # -----------------------------------------------
+
             confidence = float(
                 probabilities[0][
                     predicted_index
                 ]
             )
 
-            # Decode class
+
+            # -----------------------------------------------
+            # Decode predicted class
+            # -----------------------------------------------
+
             predicted_class = (
                 label_encoder.inverse_transform(
                     [predicted_index]
@@ -295,7 +328,7 @@ if image_file is not None:
 
 
             # =================================================
-            # 11. ALL PROBABILITIES
+            # 11. ALL CLASS PROBABILITIES
             # =================================================
 
             st.subheader(
@@ -317,7 +350,7 @@ if image_file is not None:
                 )
 
 
-            # Highest probability first
+            # Sort highest probability first
             class_probabilities.sort(
                 key=lambda item: item[1],
                 reverse=True
@@ -417,7 +450,7 @@ with st.expander(
 
 
 # ============================================================
-# 13. MODEL SOURCE
+# 13. MODEL SOURCE INFORMATION
 # ============================================================
 
 with st.expander(
@@ -425,18 +458,17 @@ with st.expander(
 ):
 
     st.write(
-        f"**Hugging Face repository:** "
-        f"`{HF_REPO_ID}`"
+        "**Model source:** GitHub repository"
     )
 
     st.write(
-        "**Model:** `spice_model_augmented.h5`"
+        "**Model:** `models/spice_model_augmented.h5`"
     )
 
     st.write(
-        "**Scaler:** `scaler_augmented.pkl`"
+        "**Scaler:** `models/scaler_augmented.pkl`"
     )
 
     st.write(
-        "**Label encoder:** `label_encoder.pkl`"
+        "**Label encoder:** `models/label_encoder.pkl`"
     )
